@@ -8,7 +8,7 @@ public class PlayerController : NetworkBehaviour
     [SerializeField] private float groundCheckRadius = 0.2f;
     [SerializeField] private Vector3 groundCheckOffset;
     [SerializeField] private LayerMask groundLayer;
-
+    [SerializeField] public bool leverUsed = false;
     [SerializeField] private Camera playerCamera; // Cámara del jugador
 
     private bool isGrounded;

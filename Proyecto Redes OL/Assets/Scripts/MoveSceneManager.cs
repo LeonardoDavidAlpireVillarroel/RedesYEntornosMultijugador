@@ -79,6 +79,8 @@ public class MoveSceneManager : NetworkBehaviour
     {
         if (IsServer)  // Solo el servidor puede cambiar de nivel
         {
+            ResetPlayerStates(); // Restablecer el estado de los jugadores y las palancas
+
             var instantiationManager = FindObjectOfType<InstantiationManager>();
             if (instantiationManager != null)
             {
@@ -90,5 +92,22 @@ public class MoveSceneManager : NetworkBehaviour
                 Debug.LogError("No se encontró el script InstantiationManager en la escena.");
             }
         }
+    }
+
+    private void ResetPlayerStates()
+    {
+        foreach (var clientId in playersInZone)
+        {
+            if (NetworkManager.Singleton.ConnectedClients.TryGetValue(clientId, out var client))
+            {
+                var playerController = client.PlayerObject.GetComponent<PlayerController>();
+                if (playerController != null)
+                {
+                    playerController.leverUsed = false; // Restablecer el estado de la interacción con la palanca
+                }
+            }
+        }
+        // Opcional: Restablecer los estados de las palancas en la escena
+        Lever.ResetAllLevers();
     }
 }

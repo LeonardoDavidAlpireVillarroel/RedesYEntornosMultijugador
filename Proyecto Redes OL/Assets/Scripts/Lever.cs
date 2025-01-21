@@ -10,11 +10,14 @@ public class Lever : NetworkBehaviour
     public static int activatedLeversCount = 0; // Contador de palancas activadas a nivel global.
     public static int totalLevers = 2; // Total de palancas en el mapa (se puede modificar dependiendo de la cantidad de palancas en la escena).
 
+
     // Este método se llama cuando un jugador está cerca de la palanca y presiona la tecla "E" para activarla.
     private void OnTriggerStay(Collider other)
     {
-        if (other.CompareTag("Player") && Input.GetKeyDown(KeyCode.E) && !isActivated)
+        PlayerController playerController = other.GetComponent<PlayerController>();
+        if (other.CompareTag("Player") && Input.GetKeyDown(KeyCode.E) && !isActivated && !playerController.leverUsed)
         {
+            playerController.leverUsed = true;
             ActivateLeverServerRpc(); // Llama al ServerRpc para activar la palanca en el servidor.
         }
     }
