@@ -9,20 +9,8 @@ public class LobbyManager : NetworkBehaviour
     [SerializeField] GameObject readyButton; // Botón de 'Listo'
     [SerializeField] GameObject startGameButton; // Botón de 'Iniciar Juego'
     [SerializeField] private List<ulong> playersReady = new List<ulong>();  // Lista de jugadores que han marcado 'Listo'
-    [SerializeField] private TMPro.TMP_Text userList; // Panel de texto donde se pueden listar los jugadores (opcional)
+    [SerializeField] private TMPro.TMP_Text userList; // Panel de texto donde se pueden listar los jugadores
 
-    [Serializable]
-    struct ChatUserdata : INetworkSerializable
-    {
-        public string chatUsername;
-        public ulong chatUserId;
-
-        void INetworkSerializable.NetworkSerialize<T>(BufferSerializer<T> serializer)
-        {
-            serializer.SerializeValue(ref chatUsername);
-            serializer.SerializeValue(ref chatUserId);
-        }
-    }
 
     // Al inicio, desactivar el botón de "Start"
     private void Start()
@@ -57,6 +45,7 @@ public class LobbyManager : NetworkBehaviour
             OnPlayerReadyServerRpc(NetworkManager.Singleton.LocalClientId);
         }
     }
+
 
     // ServerRpc llamado desde el cliente para que el servidor actualice la lista de jugadores listos
     [ServerRpc(RequireOwnership = false)]

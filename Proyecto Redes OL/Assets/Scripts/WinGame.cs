@@ -6,7 +6,7 @@ using UnityEngine;
 public class WinGame : NetworkBehaviour
 {
     [SerializeField] private GameObject winPanel; // Panel de victoria en el Canvas, se activa cuando se cumplen las condiciones.
-    [SerializeField] private string lobbySceneName = "multiplayer"; // Nombre de la escena del lobby.
+    [SerializeField] private string lobbySceneName = "Multiplayer"; // Nombre de la escena del lobby.
 
     private HashSet<ulong> playersInZone = new HashSet<ulong>(); // Almacena los IDs de los jugadores que entran a la zona de victoria.
 

@@ -69,7 +69,7 @@ public class ConnectionManager : NetworkBehaviour
         NetworkManager.Singleton.OnClientStopped += OnClientStoppedMethod;
 
         // Configuración inicial de los paneles de UI
-        connectionGroupPanel.SetActive(true);
+        connectionGroupPanel.SetActive(false);
         disconnectedFeedbackPanel.SetActive(false);
         connectingFeedbackPanel.SetActive(false);
         lobbyGroupPanel.SetActive(false);
