@@ -1,91 +1,85 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
 public class Lever : NetworkBehaviour
 {
-    [SerializeField] private bool isActivated = false; // Estado de la palanca, indica si la palanca está activada.
-    [SerializeField] private GameObject leverObject; // El objeto visual de la palanca (para mostrar o esconder).
-    public static int activatedLeversCount = 0; // Contador de palancas activadas a nivel global.
-    public static int totalLevers = 2; // Total de palancas en el mapa (se puede modificar dependiendo de la cantidad de palancas en la escena).
+    [SerializeField] private GameObject leverObject; // RepresentaciÃ³n visual de la palanca
+    public NetworkVariable<bool> isActivated = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server); // Estado sincronizado
 
+    public static int activatedLeversCount = 0; // Ya no es estÃ¡tico para evitar problemas en red
+    public const int totalLevers = 2; // Mantener fijo el total de palancas
 
-    // Este método se llama cuando un jugador está cerca de la palanca y presiona la tecla "E" para activarla.
     private void OnTriggerStay(Collider other)
     {
         PlayerController playerController = other.GetComponent<PlayerController>();
-        if (other.CompareTag("Player") && Input.GetKeyDown(KeyCode.E) && !isActivated && !playerController.leverUsed)
+
+        if (other.CompareTag("Player") && Input.GetKeyDown(KeyCode.E) && !isActivated.Value && !playerController.leverUsed)
         {
             playerController.leverUsed = true;
-            ActivateLeverServerRpc(); // Llama al ServerRpc para activar la palanca en el servidor.
+            ActivateLeverServerRpc();
         }
     }
 
-    // RPC para activar la palanca en el servidor.
     [ServerRpc(RequireOwnership = false)]
-    private void ActivateLeverServerRpc(ServerRpcParams rpcParams = default)
+    private void ActivateLeverServerRpc()
     {
-        isActivated = true; // Marca la palanca como activada.
-
-        // Incrementa el contador de palancas activadas.
+        isActivated.Value = true; // Sincronizar estado con `NetworkVariable`
         activatedLeversCount++;
 
-        // Actualiza el estado de la palanca en todos los clientes.
-        UpdateLeverStateClientRpc(isActivated);
+        UpdateLeverStateClientRpc(isActivated.Value); // Actualiza visualmente en todos los jugadores
+        UpdateLeverStatusClientRpc(activatedLeversCount, totalLevers); // Actualiza UI en todos los jugadores
 
-        // Verifica si todas las palancas están activadas y si es el servidor, permite el cambio de nivel.
         if (activatedLeversCount == totalLevers)
         {
-            NotifyAllPlayersToChangeSceneServerRpc(); // Notifica a todos los jugadores que pueden cambiar de nivel.
+            NotifyAllPlayersToChangeSceneServerRpc();
         }
     }
 
-    // RPC que actualiza el estado de la palanca en todos los clientes.
     [ClientRpc]
     private void UpdateLeverStateClientRpc(bool state)
     {
-        isActivated = state; // Actualiza el estado local de la palanca en el cliente.
+        isActivated.Value = state;
 
-        // Lógica visual para reflejar el cambio de estado (ejemplo: desactivar el objeto visual cuando la palanca está activada).
         if (leverObject != null)
         {
-            leverObject.SetActive(!state); // Desactiva el objeto visual si la palanca está activada.
+            leverObject.SetActive(!state);
         }
     }
 
-    // RPC para notificar a todos los jugadores que las palancas están activadas y pueden avanzar al siguiente nivel.
+    [ClientRpc]
+    private void UpdateLeverStatusClientRpc(int activatedLevers, int totalLevers)
+    {
+        PlayerUIManager.Singleton.UpdateLeverStatus(activatedLevers, totalLevers); // Actualiza la UI en todos los jugadores
+    }
+
     [ServerRpc(RequireOwnership = false)]
     private void NotifyAllPlayersToChangeSceneServerRpc()
     {
-        // Aquí puedes agregar la lógica de cambio de escena, por ejemplo, habilitar un trigger o hacer que todos los jugadores cambien de escena.
         Debug.Log("Ambas palancas activadas. Cambiar de nivel.");
-        // Implementa la lógica para cambiar de nivel aquí, por ejemplo:
-        // SceneManager.LoadScene("NextScene");
     }
 
-    // Método estático para reiniciar todas las palancas a su estado inicial.
     public static void ResetAllLevers()
     {
         Lever[] allLevers = FindObjectsOfType<Lever>(); // Encuentra todas las palancas en la escena.
-        activatedLeversCount = 0; // Reinicia el contador global de palancas activadas.
 
-        // Reinicia cada palanca en la escena.
         foreach (var lever in allLevers)
         {
-            lever.ResetLever();
+            lever.ResetLever(); // Llama al mÃ©todo para resetear cada palanca.
+
         }
     }
 
-    // Método para reiniciar una palanca individualmente.
+    // MÃ©todo para reiniciar una palanca individualmente.
     public void ResetLever()
     {
-        isActivated = false; // Marca la palanca como desactivada.
+        activatedLeversCount = 0;
+        isActivated.Value = false; // Desactiva la palanca en la red.
 
-        // Asegura que el objeto visual de la palanca se muestre como activo.
         if (leverObject != null)
         {
-            leverObject.SetActive(true); // Activa el objeto visual de la palanca.
+            leverObject.SetActive(true); // Reactiva la representaciÃ³n visual de la palanca.
         }
     }
 }

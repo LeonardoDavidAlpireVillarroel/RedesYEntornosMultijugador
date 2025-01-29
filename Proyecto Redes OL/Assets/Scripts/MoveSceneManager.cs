@@ -80,7 +80,7 @@ public class MoveSceneManager : NetworkBehaviour
         if (IsServer)  // Solo el servidor puede cambiar de nivel
         {
             ResetPlayerStates(); // Restablecer el estado de los jugadores y las palancas
-
+            
             var instantiationManager = FindObjectOfType<InstantiationManager>();
             if (instantiationManager != null)
             {

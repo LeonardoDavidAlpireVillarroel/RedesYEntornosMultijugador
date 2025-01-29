@@ -24,7 +24,11 @@ public class NewBehaviourScript : MonoBehaviour
         NetworkManager.Singleton.OnClientDisconnectCallback += DisconnectFromRelay;
 
         await UnityServices.InitializeAsync();
-        await AuthenticationService.Instance.SignInAnonymouslyAsync();
+        //await AuthenticationService.Instance.SignInAnonymouslyAsync();
+        if (!AuthenticationService.Instance.IsSignedIn)
+        {
+            await AuthenticationService.Instance.SignInAnonymouslyAsync();
+        }
     }
 
     public async void StartRelayServer_CreateRoom()

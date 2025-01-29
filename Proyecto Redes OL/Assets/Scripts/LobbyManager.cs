@@ -1,31 +1,32 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using TMPro;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class LobbyManager : NetworkBehaviour
 {
-    [SerializeField] GameObject readyButton; // Botón de 'Listo'
-    [SerializeField] GameObject startGameButton; // Botón de 'Iniciar Juego'
-    [SerializeField] private List<ulong> playersReady = new List<ulong>();  // Lista de jugadores que han marcado 'Listo'
-    [SerializeField] private TMPro.TMP_Text userList; // Panel de texto donde se pueden listar los jugadores
+    [SerializeField] GameObject readyButton;
+    [SerializeField] GameObject startGameButton;
+    [SerializeField] private TMPro.TMP_Text userList;
 
+    private List<ulong> playersReady = new List<ulong>(); // Lista de jugadores listos
 
-    // Al inicio, desactivar el botón de "Start"
     private void Start()
     {
         startGameButton.SetActive(false);  // Deshabilitar el botón "Start" al inicio
     }
 
-    // Método llamado cuando un jugador presiona "Listo"
     public void OnPlayerReady()
     {
-        if (IsServer)  // Solo el servidor puede manejar la lista de jugadores listos
+        if (IsServer)
         {
             ulong playerId = NetworkManager.Singleton.LocalClientId;
 
-            // Si el jugador no está en la lista de jugadores listos, agregarlo
+            // Agregar el jugador a la lista de listos si no está en ella
             if (!playersReady.Contains(playerId))
             {
                 playersReady.Add(playerId);
@@ -33,52 +34,46 @@ public class LobbyManager : NetworkBehaviour
             }
 
             // Verificar si todos los jugadores están listos
-            if (playersReady.Count == NetworkManager.Singleton.ConnectedClientsList.Count)
+            if (playersReady.Count == ConnectionManager.Singleton.connectedClients.Count)
             {
-                // Si todos están listos, habilitar el botón "Start"
                 EnableStartButtonClientRpc();
             }
         }
         else
         {
-            // Si no es el servidor, notificar al servidor usando ServerRpc
+            // Notificar al servidor que el jugador está listo
             OnPlayerReadyServerRpc(NetworkManager.Singleton.LocalClientId);
         }
     }
 
-
-    // ServerRpc llamado desde el cliente para que el servidor actualice la lista de jugadores listos
+    // ServerRpc para actualizar la lista de jugadores listos
     [ServerRpc(RequireOwnership = false)]
     public void OnPlayerReadyServerRpc(ulong playerId)
     {
         if (!playersReady.Contains(playerId))
         {
-            playersReady.Add(playerId);  // Agregar al jugador a la lista de listos
-            userList.text += playerId + "\n";  // Mostrar el ID del jugador en la interfaz
+            playersReady.Add(playerId);
+            userList.text += playerId + "\n"; // Mostrar ID del jugador
             Debug.Log($"Servidor: Jugador {playerId} ha marcado 'Listo'.");
         }
 
-        // Verificar si todos los jugadores están listos
-        if (playersReady.Count == NetworkManager.Singleton.ConnectedClientsList.Count)
+        if (playersReady.Count == ConnectionManager.Singleton.connectedClients.Count)
         {
-            EnableStartButtonClientRpc();  // Habilitar el botón "Start" para todos los jugadores
+            EnableStartButtonClientRpc(); // Habilitar botón de "Start"
         }
     }
 
-    // ClientRpc que habilita el botón "Start" para todos los clientes
     [ClientRpc]
     public void EnableStartButtonClientRpc()
     {
-        startGameButton.SetActive(true);  // Activar el botón de 'Iniciar Juego'
+        startGameButton.SetActive(true);
         Debug.Log("El botón de 'Start' ha sido habilitado para todos los jugadores.");
     }
 
-    // Método que se llama cuando se hace clic en el botón "Start"
     public void StartGame()
     {
-        if (!IsServer) return;  // Solo el servidor puede iniciar el juego
+        if (!IsServer) return;
 
-        // Cargar la escena del juego
         NetworkManager.Singleton.SceneManager.LoadScene("Level1", UnityEngine.SceneManagement.LoadSceneMode.Single);
     }
 }
