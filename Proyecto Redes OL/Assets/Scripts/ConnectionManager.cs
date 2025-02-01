@@ -1,4 +1,4 @@
-using System;
+Ôªøusing System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +13,7 @@ public struct Username : INetworkSerializable
     public string username;
     public ulong userId;
 
-    // SerializaciÛn para red
+    // Serializaci√≥n para red
     void INetworkSerializable.NetworkSerialize<T>(BufferSerializer<T> serializer)
     {
         serializer.SerializeValue(ref username);
@@ -22,6 +22,8 @@ public struct Username : INetworkSerializable
 }
 public class ConnectionManager : NetworkBehaviour
 {
+    public static Username CurrentUser;
+
     [SerializeField] private TMP_InputField ipAddressInput;
     [SerializeField] private TMP_InputField portNumberInput;
     [SerializeField] private TMP_InputField userNameInput;
@@ -42,10 +44,11 @@ public class ConnectionManager : NetworkBehaviour
         if (singleton == null)
         {
             singleton = this;
+            DontDestroyOnLoad(gameObject); // ‚¨ÖÔ∏è No destruir al cambiar de escena
         }
         else
         {
-            Destroy(this.gameObject);
+            Destroy(gameObject); // Evita duplicados
         }
     }
 
@@ -115,7 +118,7 @@ public class ConnectionManager : NetworkBehaviour
         }
         else
         {
-            Debug.LogWarning("No est·s conectado actualmente.");
+            Debug.LogWarning("No est√°s conectado actualmente.");
         }
     }
 
@@ -151,7 +154,7 @@ public class ConnectionManager : NetworkBehaviour
             }
             else
             {
-                Debug.LogError("El campo de nombre de usuario est· vacÌo o no ha sido asignado.");
+                Debug.LogError("El campo de nombre de usuario est√° vac√≠o o no ha sido asignado.");
             }
         }
     }
@@ -205,5 +208,10 @@ public class ConnectionManager : NetworkBehaviour
         {
             userList.text += $"\n{client.username} (ID: {client.userId})";
         }
+    }
+    public static void SetUserData(string name, ulong id)
+    {
+        CurrentUser.username = name;
+        CurrentUser.userId = id;
     }
 }

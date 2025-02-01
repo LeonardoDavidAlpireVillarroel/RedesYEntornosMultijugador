@@ -1,18 +1,17 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Netcode;
-using Unity.VisualScripting;
 using UnityEngine;
 
 [Serializable]
-struct ChatUserdata : INetworkSerializable //Al trabajar con RPC elementos complejos, hay que explicarle como vamos a trabajar para que se serialice a traves de una interfaz de serializacion
+class ChatUserdata : INetworkSerializable
 {
-
     public string chatUsername;
     public ulong chatUserId;
 
+    // Se usa solo para serialización, sin lógica de asignación automática.
     void INetworkSerializable.NetworkSerialize<T>(BufferSerializer<T> serializer)
     {
         serializer.SerializeValue(ref chatUsername);
@@ -20,26 +19,29 @@ struct ChatUserdata : INetworkSerializable //Al trabajar con RPC elementos compl
     }
 }
 
-
 public class ChatUserList : NetworkBehaviour
 {
-    public TMPro.TMP_Text userListLog;
     private static ChatUserList singleton;
 
-    [SerializeField]List<ChatUserdata> chatUsers;
+    [SerializeField] private List<ChatUserdata> chatUsers = new List<ChatUserdata>();
 
     private void Start()
     {
-        chatUsers = new List<ChatUserdata>();
-        NetworkManager.Singleton.OnClientConnectedCallback += ClientConnectedCallbackMethod;
-        NetworkManager.Singleton.OnClientDisconnectCallback += ClientDisonnectCallbackMethod;
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnClientConnectedCallback += ClientConnectedCallbackMethod;
+            NetworkManager.Singleton.OnClientDisconnectCallback += ClientDisconnectedCallbackMethod;
+        }
 
+        if (IsServer)
+        {
+            UpdatUserConnectedListClientRpc(chatUsers.ToArray());
+        }
     }
 
     public static ChatUserList Singleton
     {
-        get
-        { return singleton; }
+        get { return singleton; }
     }
 
     private void Awake()
@@ -47,70 +49,61 @@ public class ChatUserList : NetworkBehaviour
         if (singleton == null)
         {
             singleton = this;
+            DontDestroyOnLoad(gameObject); // ⬅️ Evita que se destruya al cambiar de escena
         }
         else
         {
-            Destroy(this.gameObject);
+            Destroy(gameObject); // ⬅️ Evita duplicados
         }
     }
+
 
     public string GetUsernameById(ulong userId)
     {
         var user = chatUsers.FirstOrDefault(u => u.chatUserId == userId);
-        return user.chatUsername ?? "Unknown"; // Si no encuentra el usuario, devuelve "Unknown"
+        return user != null ? user.chatUsername : "Unknown";
     }
 
     private void ClientConnectedCallbackMethod(ulong connectedClientId)
     {
         if (NetworkManager.Singleton.LocalClientId == connectedClientId)
         {
-            ChatUserdata newUserChatData = new ChatUserdata();
-            newUserChatData.chatUserId=NetworkManager.Singleton.LocalClientId;
-            newUserChatData.chatUsername = ChatConnectionManager.Singleton.ChatUserNameInput.text;
+            string username = ChatConnectionManager.Singleton.ChatUserNameInput.text;
+
+            ChatUserdata newUserChatData = new ChatUserdata
+            {
+                chatUserId = connectedClientId,
+                chatUsername = username
+            };
 
             AddConnectedClientServerRpc(newUserChatData);
         }
     }
-    private void ClientDisonnectCallbackMethod(ulong disconnectedClientId)
+
+    private void ClientDisconnectedCallbackMethod(ulong disconnectedClientId)
     {
         if (NetworkManager.Singleton.IsServer)
         {
-            for (int i = chatUsers.Count-1; i >= 0; i--)
-            {
-                if (chatUsers[i].chatUserId == disconnectedClientId)
-                {
-                    chatUsers.RemoveAt(i);
-                }
-            }
+            chatUsers.RemoveAll(u => u.chatUserId == disconnectedClientId);
             UpdatUserConnectedListClientRpc(chatUsers.ToArray());
         }
+
         if (disconnectedClientId == NetworkManager.Singleton.LocalClientId)
         {
             chatUsers.Clear();
         }
     }
 
-
-    [ServerRpc(RequireOwnership =false)]
-    private void AddConnectedClientServerRpc(ChatUserdata newChatUserData)//Se puede pasar esto como parametro porque implementamos la interfaz INetworkSer...
+    [ServerRpc(RequireOwnership = false)]
+    private void AddConnectedClientServerRpc(ChatUserdata newChatUserData)
     {
         chatUsers.Add(newChatUserData);
         UpdatUserConnectedListClientRpc(chatUsers.ToArray());
     }
 
     [ClientRpc]
-    private void UpdatUserConnectedListClientRpc(ChatUserdata [] userList)//No es lo ideal pasar arrays por ser pesados, en este caso como no hay necesidad de optimizacion se hara asi
+    private void UpdatUserConnectedListClientRpc(ChatUserdata[] userList)
     {
         chatUsers = userList.ToList();
-        UpdateCharUserLog();
-    }
-
-    private void UpdateCharUserLog()
-    {
-        userListLog.text = "";
-        for (int i = 0; i < chatUsers.Count; i++)
-        {
-            userListLog.text += chatUsers[i].chatUserId + "-" + chatUsers[i].chatUsername + "\n";
-        }
     }
 }

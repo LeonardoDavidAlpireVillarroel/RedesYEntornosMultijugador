@@ -13,7 +13,7 @@ public class LobbyManager : NetworkBehaviour
     [SerializeField] GameObject startGameButton;
     [SerializeField] private TMPro.TMP_Text userList;
 
-    private List<ulong> playersReady = new List<ulong>(); // Lista de jugadores listos
+    private Dictionary<ulong, bool> playersReady = new Dictionary<ulong, bool>(); // Diccionario de jugadores y su estado de "Listo"
 
     private void Start()
     {
@@ -27,11 +27,17 @@ public class LobbyManager : NetworkBehaviour
             ulong playerId = NetworkManager.Singleton.LocalClientId;
 
             // Agregar el jugador a la lista de listos si no está en ella
-            if (!playersReady.Contains(playerId))
+            if (!playersReady.ContainsKey(playerId))
             {
-                playersReady.Add(playerId);
-                Debug.Log($"Jugador {playerId} ha marcado 'Listo'.");
+                playersReady.Add(playerId, false);
             }
+
+            // Marcar al jugador como listo
+            playersReady[playerId] = true;
+            Debug.Log($"Jugador {playerId} ha marcado 'Listo'.");
+
+            // Actualiza la lista de jugadores en todos los clientes
+            UpdatePlayerListClientRpc(playersReady.Keys.ToArray(), playersReady.Values.ToArray());
 
             // Verificar si todos los jugadores están listos
             if (playersReady.Count == ConnectionManager.Singleton.connectedClients.Count)
@@ -50,12 +56,15 @@ public class LobbyManager : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void OnPlayerReadyServerRpc(ulong playerId)
     {
-        if (!playersReady.Contains(playerId))
+        if (!playersReady.ContainsKey(playerId))
         {
-            playersReady.Add(playerId);
-            userList.text += playerId + "\n"; // Mostrar ID del jugador
+            playersReady.Add(playerId, false);
+            userList.text += playerId + " - Not Ready\n"; // Mostrar ID del jugador con "Not Ready"
             Debug.Log($"Servidor: Jugador {playerId} ha marcado 'Listo'.");
         }
+
+        // Actualiza la lista de jugadores en todos los clientes
+        UpdatePlayerListClientRpc(playersReady.Keys.ToArray(), playersReady.Values.ToArray());
 
         if (playersReady.Count == ConnectionManager.Singleton.connectedClients.Count)
         {
@@ -70,10 +79,23 @@ public class LobbyManager : NetworkBehaviour
         Debug.Log("El botón de 'Start' ha sido habilitado para todos los jugadores.");
     }
 
+    // Este método será invocado cuando se haga clic en el botón "Start"
     public void StartGame()
     {
         if (!IsServer) return;
 
         NetworkManager.Singleton.SceneManager.LoadScene("Level1", UnityEngine.SceneManagement.LoadSceneMode.Single);
+    }
+
+    // Este ClientRpc actualizará la lista de jugadores en todos los clientes
+    [ClientRpc]
+    public void UpdatePlayerListClientRpc(ulong[] playerIds, bool[] readyStatuses)
+    {
+        userList.text = "Usuarios conectados:";
+        for (int i = 0; i < playerIds.Length; i++)
+        {
+            string status = readyStatuses[i] ? "Ready" : "Not Ready";
+            userList.text += $"\n{playerIds[i]} - {status}";
+        }
     }
 }
