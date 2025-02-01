@@ -33,6 +33,7 @@ public class ConnectionManager : NetworkBehaviour
     [SerializeField] private GameObject disconnectButton;
     [SerializeField] private GameObject lobbyGroupPanel;
     [SerializeField] private TMP_Text userList;
+    [SerializeField] private GameObject chatPanel;
 
     private static ConnectionManager singleton;
     public List<Username> connectedClients = new List<Username>(); // Lista de jugadores conectados
@@ -132,6 +133,7 @@ public class ConnectionManager : NetworkBehaviour
     {
         connectionGroupPanel.SetActive(false);
         connectingFeedbackPanel.SetActive(true);
+        chatPanel.SetActive(false);
         StartCoroutine(cancelConnectionBecauseTimeout());
     }
 
@@ -146,6 +148,7 @@ public class ConnectionManager : NetworkBehaviour
             disconnectedFeedbackPanel.SetActive(false);
             connectingFeedbackPanel.SetActive(false);
             disconnectButton.SetActive(true);
+            chatPanel.SetActive(true);
 
             if (userNameInput != null && !string.IsNullOrEmpty(userNameInput.text))
             {
