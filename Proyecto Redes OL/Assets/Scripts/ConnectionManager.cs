@@ -32,6 +32,12 @@ public class ConnectionManager : NetworkBehaviour
     [SerializeField] private GameObject chatPanel;
     [SerializeField] public TMP_Text errorMessage; // Campo para mostrar mensajes de error
     [SerializeField] private GameObject MenuPanel;
+    [SerializeField] private GameObject relayConnectPanel;
+    [SerializeField] private GameObject iBackground;
+    [SerializeField] private TMP_Text usernameText;
+    [SerializeField] private TMP_InputField inputUsername;
+    [SerializeField] private GameObject roomCodePanel;
+    [SerializeField] private GameObject disconnectButton;
 
 
     private static ConnectionManager singleton;
@@ -110,6 +116,7 @@ public class ConnectionManager : NetworkBehaviour
             disconnectedFeedbackPanel.SetActive(true);
             connectingFeedbackPanel.SetActive(false);
             lobbyGroupPanel.SetActive(false);
+            disconnectButton.SetActive(false);
 
             Debug.Log("Jugador desconectado correctamente.");
         }
@@ -140,13 +147,16 @@ public class ConnectionManager : NetworkBehaviour
         if (NetworkManager.Singleton.LocalClientId == connectedClientID)
         {
             StopAllCoroutines();
-            lobbyGroupPanel.SetActive(true);
-            disconnectedFeedbackPanel.SetActive(false);
-            connectingFeedbackPanel.SetActive(false);
 
-            chatPanel.SetActive(true);
-            
+            // Mostrar solo el chatPanel y ocultar otros paneles
+            lobbyGroupPanel.SetActive(true);  // Oculta el lobby
+            disconnectedFeedbackPanel.SetActive(false);  // Oculta el panel de desconexión
+            connectingFeedbackPanel.SetActive(false);  // Oculta el panel de conexión
+            MenuPanel.SetActive(true); // Asegúrate de ocultar el menú
+            chatPanel.SetActive(true); // Mantén visible solo el chatPanel
+            disconnectButton.SetActive(false);
 
+            // Mostrar el chat y la lista de jugadores si el nombre de usuario está definido
             if (userNameInput != null && !string.IsNullOrEmpty(userNameInput.text))
             {
                 var newUser = new Username { userId = connectedClientID, username = userNameInput.text };
@@ -173,10 +183,20 @@ public class ConnectionManager : NetworkBehaviour
 
         if (NetworkManager.Singleton.LocalClientId == disconnectedClientID)
         {
-            MenuPanel.SetActive(true);
-            disconnectedFeedbackPanel.SetActive(true);
-            connectingFeedbackPanel.SetActive(false);
-            lobbyGroupPanel.SetActive(false);
+            // Asegúrate de ocultar todos los paneles excepto el chatPanel
+            MenuPanel.SetActive(true);  // Puedes mostrar el menú nuevamente si es necesario
+            disconnectedFeedbackPanel.SetActive(true); // Mostrar mensaje de desconexión
+            connectingFeedbackPanel.SetActive(false);  // Ocultar mensaje de conexión
+            lobbyGroupPanel.SetActive(false);  // Ocultar el grupo del lobby
+            chatPanel.SetActive(false);  // Ocultar el chat panel cuando el cliente se desconecta
+
+            // Mostrar los paneles cuando el jugador se desconecte
+            relayConnectPanel.SetActive(true);   // Mostrar el panel de reconexión
+            iBackground.SetActive(true);        // Mostrar el fondo (si es necesario)
+            usernameText.gameObject.SetActive(true);  // Mostrar el texto de usuario
+            inputUsername.gameObject.SetActive(true);  // Mostrar el campo de entrada del nombre de usuario
+            roomCodePanel.SetActive(true);      // Mostrar el panel del código de sala
+            disconnectButton.SetActive(false);
         }
     }
 
@@ -186,6 +206,7 @@ public class ConnectionManager : NetworkBehaviour
         MenuPanel.SetActive(true);
         disconnectedFeedbackPanel.SetActive(true);
         connectingFeedbackPanel.SetActive(false);
+        disconnectButton.SetActive(false);
     }
 
     [ServerRpc(RequireOwnership = false)]

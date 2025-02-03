@@ -26,6 +26,7 @@ public class ChatManager : NetworkBehaviour
         if (singleton == null)
         {
             singleton = this;
+            DontDestroyOnLoad(gameObject);
         }
         else
         {

@@ -13,6 +13,10 @@ public class LobbyManager : NetworkBehaviour
     [SerializeField] GameObject startGameButton;
     [SerializeField] private TMPro.TMP_Text userList;
     [SerializeField] private GameObject menuCanvas;
+    [SerializeField] private GameObject chatPanel;  // Declarar la referencia al chatPanel
+    [SerializeField] private GameObject disconnectButton;  // Referencia al botón de desconexión
+
+
     private static LobbyManager singleton;
 
     private Dictionary<ulong, bool> playersReady = new Dictionary<ulong, bool>(); // Diccionario de jugadores y su estado de "Listo"
@@ -98,12 +102,18 @@ public class LobbyManager : NetworkBehaviour
     public void StartGame()
     {
         if (!IsServer) return;
+
+        // Solo el servidor habilita la escena y la desactivación del canvas
         if (menuCanvas != null)
         {
-            menuCanvas.SetActive(false); // Desactiva el menú
-            startGameButton.SetActive(false);
+            // Desactiva el menú en el servidor
+            DisableMenuCanvas();
         }
 
+        // Llama al ClientRpc para desactivar el canvas en todos los clientes
+        DisableMenuCanvasClientRpc();
+
+        // Cambia la escena solo en el servidor
         NetworkManager.Singleton.SceneManager.LoadScene("Level1", UnityEngine.SceneManagement.LoadSceneMode.Single);
     }
 
@@ -116,6 +126,41 @@ public class LobbyManager : NetworkBehaviour
             string status = readyStatuses[i] ? "Ready" : "Not Ready";
             userList.text += $"\nJugador {playerIds[i]} ha marcado 'Listo'.";
 
+        }
+    }
+    public void DisableMenuCanvas()
+    {
+        startGameButton.SetActive(false);
+        disconnectButton.SetActive(true);
+        // Desactiva todos los paneles del menú y el lobby, excepto el chat
+        if (menuCanvas != null)
+        {
+            // Aquí desactivas todos los elementos menos el chatPanel y el disconnectButton
+            foreach (Transform child in menuCanvas.transform)
+            {
+                if (child.gameObject != chatPanel && child.gameObject != disconnectButton)
+                {
+                    child.gameObject.SetActive(false);
+                }
+            }
+        }
+    }
+
+    [ClientRpc]
+    public void DisableMenuCanvasClientRpc()
+    {
+        startGameButton.SetActive(false);
+        disconnectButton.SetActive(true);
+        // Desactiva todos los paneles del menú y el lobby en todos los clientes, excepto el chatPanel
+        if (menuCanvas != null)
+        {
+            foreach (Transform child in menuCanvas.transform)
+            {
+                if (child.gameObject != chatPanel && child.gameObject != disconnectButton)
+                {
+                    child.gameObject.SetActive(false);
+                }
+            }
         }
     }
 }
