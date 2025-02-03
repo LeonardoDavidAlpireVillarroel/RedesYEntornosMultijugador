@@ -2,13 +2,28 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class WinGame : NetworkBehaviour
 {
     [SerializeField] private GameObject winPanel; // Panel de victoria en el Canvas, se activa cuando se cumplen las condiciones.
+
     [SerializeField] private string lobbySceneName = "Multiplayer"; // Nombre de la escena del lobby.
+    [SerializeField] private Button closeButton; // Nombre de la escena del lobby.
+
+    private ConnectionManager connectionManager;
 
     private HashSet<ulong> playersInZone = new HashSet<ulong>(); // Almacena los IDs de los jugadores que entran a la zona de victoria.
+
+    private void Start()
+    {
+        connectionManager = FindObjectOfType<ConnectionManager>(); // Buscar el ConnectionManager en la escena
+
+        if (closeButton != null)
+        {
+            closeButton.onClick.AddListener(OnCloseButtonClicked); // Asignar el evento al botón
+        }
+    }
 
     // Método que se ejecuta cuando un jugador entra en la zona de victoria.
     private void OnTriggerEnter(Collider other)
@@ -52,6 +67,7 @@ public class WinGame : NetworkBehaviour
         if (playersInZone.Count == totalPlayers && Lever.activatedLeversCount == Lever.totalLevers)
         {
             Debug.Log("Todos los jugadores están en la zona y ambas palancas están activadas. Mostrando panel de victoria.");
+
             ShowWinPanel();
         }
     }
@@ -93,7 +109,7 @@ public class WinGame : NetworkBehaviour
     private void RequestReturnToLobbyServerRpc(ServerRpcParams rpcParams = default)
     {
         Debug.Log($"Jugador {rpcParams.Receive.SenderClientId} solicitó volver al lobby.");
-        ChangeSceneForAllClients(); // Cambia la escena para todos los jugadores.
+        NetworkManager.Singleton.SceneManager.LoadScene(lobbySceneName, UnityEngine.SceneManagement.LoadSceneMode.Single);
     }
 
     // Cambia la escena para todos los jugadores.
@@ -121,5 +137,30 @@ public class WinGame : NetworkBehaviour
     private void NotifyClientsToChangeSceneClientRpc(string sceneName)
     {
         Debug.Log($"Cambiando a la escena {sceneName} para todos los clientes.");
+    }
+    private void OnCloseButtonClicked()
+    {
+        if (connectionManager != null)
+        {
+            connectionManager.out_Disconnect(); // Llamar al método de desconexión
+        }
+        else
+        {
+            Debug.LogWarning("ConnectionManager no encontrado.");
+        }
+
+        // Cambiar la escena a "Multiplayer"
+        ReturnToMultiplayer();
+    }
+    private void ReturnToMultiplayer()
+    {
+        if (IsServer)
+        {
+            NetworkManager.Singleton.SceneManager.LoadScene(lobbySceneName, UnityEngine.SceneManagement.LoadSceneMode.Single);
+        }
+        else
+        {
+            RequestReturnToLobbyServerRpc(); // Pedir al servidor cambiar la escena
+        }
     }
 }

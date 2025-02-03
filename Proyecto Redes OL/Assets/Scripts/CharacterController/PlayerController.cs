@@ -1,3 +1,4 @@
+using TMPro;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -16,6 +17,7 @@ public class PlayerController : NetworkBehaviour
     private Quaternion targetRotation;
     private Animator animator;
     private CharacterController characterController;
+    private TMP_InputField chatInputField;
 
     private void Awake()
     {
@@ -34,6 +36,8 @@ public class PlayerController : NetworkBehaviour
 
     private void Start()
     {
+        chatInputField = FindObjectOfType<TMP_InputField>();
+
         if (!IsOwner && playerCamera != null)
         {
             playerCamera.gameObject.SetActive(false); // Desactiva la cámara para jugadores remotos
@@ -43,6 +47,9 @@ public class PlayerController : NetworkBehaviour
     private void Update()
     {
         if (!IsOwner) return;
+
+        // Si el chat está enfocado, cancelar el movimiento
+        if (chatInputField != null && chatInputField.isFocused) return;
 
         HandleMovement();
     }
