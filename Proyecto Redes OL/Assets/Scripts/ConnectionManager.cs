@@ -34,6 +34,8 @@ public class ConnectionManager : NetworkBehaviour
     [SerializeField] private GameObject lobbyGroupPanel;
     [SerializeField] private TMP_Text userList;
     [SerializeField] private GameObject chatPanel;
+    [SerializeField] public TMP_Text errorMessage; // Campo para mostrar mensajes de error
+
 
     private static ConnectionManager singleton;
     public List<Username> connectedClients = new List<Username>(); // Lista de jugadores conectados
@@ -83,12 +85,26 @@ public class ConnectionManager : NetworkBehaviour
     // Iniciar como Host
     public void out_ConnectAsHost()
     {
+        if (string.IsNullOrWhiteSpace(userNameInput.text))
+        {
+            errorMessage.text = "Debes introducir un nombre para ingresar.";
+            return; // No permite continuar si el nombre está vacío
+        }
+
+        errorMessage.text = ""; // Borra cualquier mensaje de error previo
         NetworkManager.Singleton.StartHost();
     }
 
     // Iniciar como Cliente
     public void out_ConnectAsClient()
     {
+        if (string.IsNullOrWhiteSpace(userNameInput.text))
+        {
+            errorMessage.text = "Debes introducir un nombre para ingresar.";
+            return; // No permite continuar si el nombre está vacío
+        }
+
+        errorMessage.text = ""; // Borra cualquier mensaje de error previo
         NetworkManager.Singleton.StartClient();
     }
 
@@ -149,6 +165,7 @@ public class ConnectionManager : NetworkBehaviour
             connectingFeedbackPanel.SetActive(false);
             disconnectButton.SetActive(true);
             chatPanel.SetActive(true);
+            
 
             if (userNameInput != null && !string.IsNullOrEmpty(userNameInput.text))
             {

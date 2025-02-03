@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
@@ -33,6 +33,11 @@ public class NewBehaviourScript : MonoBehaviour
 
     public async void StartRelayServer_CreateRoom()
     {
+        if (string.IsNullOrWhiteSpace(ChatConnectionManager.Singleton.ChatUserNameInput.text))
+        {
+            ConnectionManager.Singleton.errorMessage.text= "Debes introducir un nombre antes de crear la sala.";
+            return; //Evita que se cree la sala sin un nombre
+        }
         string joinCode = await StartHostWithRelay();
         joinRoomCodeTextField.text = "";
         joinRoomCodeTextField.text += joinCode;
@@ -64,6 +69,11 @@ public class NewBehaviourScript : MonoBehaviour
     }
     public async void JoinRelayServer()
     {
+        if (string.IsNullOrWhiteSpace(ChatConnectionManager.Singleton.ChatUserNameInput.text))
+        {
+            ConnectionManager.Singleton.errorMessage.text = "Debes introducir un nombre antes de unirte a la sala.";
+            return; //Evita que el jugador se conecte sin nombre
+        }
         await StartClientJoinRelayServer(input_roomCodeToJoin.text);
     }
 

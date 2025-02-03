@@ -91,11 +91,11 @@ public class LobbyManager : NetworkBehaviour
     [ClientRpc]
     public void UpdatePlayerListClientRpc(ulong[] playerIds, bool[] readyStatuses)
     {
-        userList.text = "Usuarios conectados:";
         for (int i = 0; i < playerIds.Length; i++)
         {
             string status = readyStatuses[i] ? "Ready" : "Not Ready";
-            userList.text += $"\n{playerIds[i]} - {status}";
+            userList.text += $"\nJugador {playerIds[i]} ha marcado 'Listo'.";
+
         }
     }
 }

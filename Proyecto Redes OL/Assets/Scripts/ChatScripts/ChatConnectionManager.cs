@@ -18,19 +18,20 @@ public class ChatConnectionManager : MonoBehaviour
         {
             singleton = this;
 
-            // Buscar el primer TMP_InputField en la escena (si no está asignado en el inspector)
+            // Buscar el campo de nombre de usuario si no está asignado
             if (chatUserNameInput == null)
             {
                 chatUserNameInput = FindObjectOfType<TMPro.TMP_InputField>();
             }
 
-            DontDestroyOnLoad(this.gameObject); // Si deseas que este objeto persista entre escenas
+            DontDestroyOnLoad(this.gameObject);
         }
         else
         {
             Destroy(this.gameObject);
         }
     }
+
 
     // Función para obtener la lista de jugadores conectados desde ConnectionManager
     public List<Username> GetConnectedPlayers()
