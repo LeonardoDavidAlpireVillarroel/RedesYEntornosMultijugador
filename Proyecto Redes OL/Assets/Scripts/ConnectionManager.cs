@@ -24,17 +24,14 @@ public class ConnectionManager : NetworkBehaviour
 {
     public static Username CurrentUser;
 
-    [SerializeField] private TMP_InputField ipAddressInput;
-    [SerializeField] private TMP_InputField portNumberInput;
     [SerializeField] private TMP_InputField userNameInput;
-    [SerializeField] private GameObject connectionGroupPanel;
     [SerializeField] private GameObject connectingFeedbackPanel;
     [SerializeField] private GameObject disconnectedFeedbackPanel;
-    [SerializeField] private GameObject disconnectButton;
     [SerializeField] private GameObject lobbyGroupPanel;
     [SerializeField] private TMP_Text userList;
     [SerializeField] private GameObject chatPanel;
     [SerializeField] public TMP_Text errorMessage; // Campo para mostrar mensajes de error
+    [SerializeField] private GameObject MenuPanel;
 
 
     private static ConnectionManager singleton;
@@ -65,7 +62,6 @@ public class ConnectionManager : NetworkBehaviour
         NetworkManager.Singleton.OnClientStopped += OnClientStoppedMethod;
 
         // Configura los paneles de UI
-        connectionGroupPanel.SetActive(false);
         disconnectedFeedbackPanel.SetActive(false);
         connectingFeedbackPanel.SetActive(false);
         lobbyGroupPanel.SetActive(false);
@@ -85,26 +81,12 @@ public class ConnectionManager : NetworkBehaviour
     // Iniciar como Host
     public void out_ConnectAsHost()
     {
-        if (string.IsNullOrWhiteSpace(userNameInput.text))
-        {
-            errorMessage.text = "Debes introducir un nombre para ingresar.";
-            return; // No permite continuar si el nombre está vacío
-        }
-
-        errorMessage.text = ""; // Borra cualquier mensaje de error previo
         NetworkManager.Singleton.StartHost();
     }
 
     // Iniciar como Cliente
     public void out_ConnectAsClient()
     {
-        if (string.IsNullOrWhiteSpace(userNameInput.text))
-        {
-            errorMessage.text = "Debes introducir un nombre para ingresar.";
-            return; // No permite continuar si el nombre está vacío
-        }
-
-        errorMessage.text = ""; // Borra cualquier mensaje de error previo
         NetworkManager.Singleton.StartClient();
     }
 
@@ -126,9 +108,7 @@ public class ConnectionManager : NetworkBehaviour
             NetworkManager.Singleton.Shutdown();
 
             disconnectedFeedbackPanel.SetActive(true);
-            disconnectButton.SetActive(false);
             connectingFeedbackPanel.SetActive(false);
-            connectionGroupPanel.SetActive(true);
             lobbyGroupPanel.SetActive(false);
 
             Debug.Log("Jugador desconectado correctamente.");
@@ -147,8 +127,8 @@ public class ConnectionManager : NetworkBehaviour
 
     private void OnClientStartedMethod()
     {
-        connectionGroupPanel.SetActive(false);
-        connectingFeedbackPanel.SetActive(true);
+        
+        //connectingFeedbackPanel.SetActive(true);
         chatPanel.SetActive(false);
         StartCoroutine(cancelConnectionBecauseTimeout());
     }
@@ -163,7 +143,7 @@ public class ConnectionManager : NetworkBehaviour
             lobbyGroupPanel.SetActive(true);
             disconnectedFeedbackPanel.SetActive(false);
             connectingFeedbackPanel.SetActive(false);
-            disconnectButton.SetActive(true);
+
             chatPanel.SetActive(true);
             
 
@@ -193,10 +173,9 @@ public class ConnectionManager : NetworkBehaviour
 
         if (NetworkManager.Singleton.LocalClientId == disconnectedClientID)
         {
+            MenuPanel.SetActive(true);
             disconnectedFeedbackPanel.SetActive(true);
-            disconnectButton.SetActive(false);
             connectingFeedbackPanel.SetActive(false);
-            connectionGroupPanel.SetActive(false);
             lobbyGroupPanel.SetActive(false);
         }
     }
@@ -204,10 +183,9 @@ public class ConnectionManager : NetworkBehaviour
     private void OnClientStoppedMethod(bool obj)
     {
         StopAllCoroutines();
+        MenuPanel.SetActive(true);
         disconnectedFeedbackPanel.SetActive(true);
-        disconnectButton.SetActive(false);
         connectingFeedbackPanel.SetActive(false);
-        connectionGroupPanel.SetActive(true);
     }
 
     [ServerRpc(RequireOwnership = false)]

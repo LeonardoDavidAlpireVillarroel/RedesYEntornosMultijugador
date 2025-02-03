@@ -12,12 +12,27 @@ public class LobbyManager : NetworkBehaviour
     [SerializeField] GameObject readyButton;
     [SerializeField] GameObject startGameButton;
     [SerializeField] private TMPro.TMP_Text userList;
+    [SerializeField] private GameObject menuCanvas;
+    private static LobbyManager singleton;
 
     private Dictionary<ulong, bool> playersReady = new Dictionary<ulong, bool>(); // Diccionario de jugadores y su estado de "Listo"
 
     private void Start()
     {
         startGameButton.SetActive(false);  // Deshabilitar el botón "Start" al inicio
+    }
+    private void Awake()
+    {
+        // Si ya hay una instancia, destruye este objeto para evitar duplicados
+        if (singleton == null)
+        {
+            singleton = this;
+            DontDestroyOnLoad(this.gameObject);
+        }
+        else
+        {
+            Destroy(this.gameObject);
+        }
     }
 
     public void OnPlayerReady()
@@ -83,6 +98,11 @@ public class LobbyManager : NetworkBehaviour
     public void StartGame()
     {
         if (!IsServer) return;
+        if (menuCanvas != null)
+        {
+            menuCanvas.SetActive(false); // Desactiva el menú
+            startGameButton.SetActive(false);
+        }
 
         NetworkManager.Singleton.SceneManager.LoadScene("Level1", UnityEngine.SceneManagement.LoadSceneMode.Single);
     }

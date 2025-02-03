@@ -18,6 +18,8 @@ public class NewBehaviourScript : MonoBehaviour
     [SerializeField] TextMeshProUGUI joinRoomCodeTextField;
     [SerializeField] TMP_InputField input_roomCodeToJoin;
 
+
+
     private async void Start()
     {
         joinRoomCodeTextField.text = " - - ";
@@ -31,6 +33,8 @@ public class NewBehaviourScript : MonoBehaviour
         }
     }
 
+
+
     public async void StartRelayServer_CreateRoom()
     {
         if (string.IsNullOrWhiteSpace(ChatConnectionManager.Singleton.ChatUserNameInput.text))
@@ -41,6 +45,7 @@ public class NewBehaviourScript : MonoBehaviour
         string joinCode = await StartHostWithRelay();
         joinRoomCodeTextField.text = "";
         joinRoomCodeTextField.text += joinCode;
+
     }
     private async Task<String> StartHostWithRelay(int maxConnections = 10)
     {
@@ -86,11 +91,8 @@ public class NewBehaviourScript : MonoBehaviour
         return !string.IsNullOrEmpty(joinCode) && NetworkManager.Singleton.StartClient();
     }
 
-    private void DisconnectFromRelay(ulong obj)
+    public void DisconnectFromRelay(ulong obj)
     {
         joinRoomCodeTextField.text = " - - ";
     }
-
-
-
 }
