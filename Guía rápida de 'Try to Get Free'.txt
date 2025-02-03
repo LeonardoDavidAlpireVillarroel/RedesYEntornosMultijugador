@@ -1,0 +1,39 @@
+Guía rápida de 'Try to Get Free'
+
+Objetivo del juego:
+'Try to Get Free' es un juego cooperativo en el que dos jugadores deben activar palancas en distintos niveles para avanzar hasta la victoria.
+
+
+Controles:
+
+Movimiento: WASD
+
+Interactuar con objetos: E
+
+Chatear con el compañero: Abrir chat en el lobby
+
+
+Flujo del juego:
+
+Inicio: Al ejecutar el juego, los jugadores ingresan al menú principal.
+
+Lobby: Aquí los jugadores pueden unirse a una partida. Cada jugador debe marcarse como "Listo" para que la partida inicie.
+
+Juego: Una vez dentro del nivel, ambos jugadores deben colaborar para activar las palancas y superar los desafíos.
+
+Victoria: Si los jugadores activan todas las palancas necesarias, avanzan al siguiente nivel o completan el juego.
+
+
+Conexión y multijugador:
+
+Se usa Unity Relay Server para la conexión.
+
+La sincronización es en tiempo real mediante Netcode for GameObjects.
+
+Solo el anfitrión (host) puede iniciar la partida cuando todos estén listos.
+
+En caso de desconexión, se puede reingresar al lobby y esperar una nueva partida.
+
+¡Coordina con tu compañero y trata de escapar juntos!
+
+Enlace GitHub: https://github.com/LeonardoDavidAlpireVillarroel/RedesYEntornosMultijugador
