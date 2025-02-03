@@ -5,11 +5,12 @@ using UnityEngine;
 
 public class Lever : NetworkBehaviour
 {
-    [SerializeField] private GameObject leverObject; // Representación visual de la palanca
-    public NetworkVariable<bool> isActivated = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server); // Estado sincronizado
+    [SerializeField] private GameObject leverObject; 
+    public NetworkVariable<bool> isActivated = new NetworkVariable<bool>
+        (false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
-    public static int activatedLeversCount = 0; // Ya no es estático para evitar problemas en red
-    public const int totalLevers = 2; // Mantener fijo el total de palancas
+    public static int activatedLeversCount = 0; 
+    public const int totalLevers = 2; 
 
     private void OnTriggerStay(Collider other)
     {

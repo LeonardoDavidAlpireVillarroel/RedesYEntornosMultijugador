@@ -51,13 +51,13 @@ public class ChatManager : NetworkBehaviour
 
 
 
-    [ServerRpc(RequireOwnership =false)]//Solo se ejecutan si eres el owner, para que sea cualquiera se agrega el "Require..."
-    private void SendMessageServerRpc(string messageToSend)//Llamado por cualquier cliente y ejecutado en el Servidor
+    [ServerRpc(RequireOwnership =false)]
+    private void SendMessageServerRpc(string messageToSend)
     {
         SendMessageClientRpc(messageToSend);
     }
     [ClientRpc]
-    private void SendMessageClientRpc(string messageToSend)//LLamado por el servidor y ejecutado en todos los clientes
+    private void SendMessageClientRpc(string messageToSend)
     {
         chatLog.text += "\n" + messageToSend;
     }

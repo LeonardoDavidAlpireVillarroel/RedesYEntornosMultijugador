@@ -43,19 +43,19 @@ public class WinGame : NetworkBehaviour
         }
     }
 
-    // RPC que se llama cuando un jugador entra en la zona de victoria.
+  
     [ServerRpc(RequireOwnership = false)]
     private void PlayerEnteredZoneServerRpc(ulong clientId)
     {
-        playersInZone.Add(clientId); // Añade al jugador a la zona.
-        CheckPlayersInZone(); // Revisa si se cumplen las condiciones para mostrar el panel de victoria.
+        playersInZone.Add(clientId); 
+        CheckPlayersInZone(); 
     }
 
-    // RPC que se llama cuando un jugador sale de la zona de victoria.
+   
     [ServerRpc(RequireOwnership = false)]
     private void PlayerExitedZoneServerRpc(ulong clientId)
     {
-        playersInZone.Remove(clientId); // Elimina al jugador de la zona.
+        playersInZone.Remove(clientId); 
     }
 
     // Revisa si todos los jugadores están en la zona y si ambas palancas están activadas.
@@ -81,7 +81,7 @@ public class WinGame : NetworkBehaviour
         }
     }
 
-    // RPC que notifica a todos los clientes para que muestren el panel de victoria.
+
     [ClientRpc]
     private void NotifyClientsWinClientRpc()
     {
@@ -104,7 +104,7 @@ public class WinGame : NetworkBehaviour
         }
     }
 
-    // RPC que el cliente usa para pedir al servidor que cambie la escena.
+    
     [ServerRpc(RequireOwnership = false)]
     private void RequestReturnToLobbyServerRpc(ServerRpcParams rpcParams = default)
     {
@@ -132,7 +132,7 @@ public class WinGame : NetworkBehaviour
         }
     }
 
-    // RPC que notifica a todos los clientes que deben cambiar a la nueva escena.
+ 
     [ClientRpc]
     private void NotifyClientsToChangeSceneClientRpc(string sceneName)
     {

@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -9,25 +8,24 @@ using UnityEngine.SceneManagement;
 
 public class LobbyManager : NetworkBehaviour
 {
-    [SerializeField] GameObject readyButton;
-    [SerializeField] GameObject startGameButton;
-    [SerializeField] private TMPro.TMP_Text userList;
+    [SerializeField] private GameObject readyButton;
+    [SerializeField] private GameObject startGameButton;
+    [SerializeField] private TMP_Text userList;
     [SerializeField] private GameObject menuCanvas;
-    [SerializeField] private GameObject chatPanel;  // Declarar la referencia al chatPanel
-    [SerializeField] private GameObject disconnectButton;  // Referencia al botón de desconexión
-
+    [SerializeField] private GameObject chatPanel;
+    [SerializeField] private GameObject disconnectButton;
 
     private static LobbyManager singleton;
-
-    private Dictionary<ulong, bool> playersReady = new Dictionary<ulong, bool>(); // Diccionario de jugadores y su estado de "Listo"
+    private Dictionary<ulong, bool> playersReady = new Dictionary<ulong, bool>();
 
     private void Start()
     {
-        startGameButton.SetActive(false);  // Deshabilitar el botón "Start" al inicio
+        startGameButton.SetActive(false); // Desactiva el botón de inicio al comienzo
     }
+
     private void Awake()
     {
-        // Si ya hay una instancia, destruye este objeto para evitar duplicados
+        // Asegura que solo exista una instancia de LobbyManager
         if (singleton == null)
         {
             singleton = this;
@@ -44,21 +42,15 @@ public class LobbyManager : NetworkBehaviour
         if (IsServer)
         {
             ulong playerId = NetworkManager.Singleton.LocalClientId;
-
-            // Agregar el jugador a la lista de listos si no está en ella
             if (!playersReady.ContainsKey(playerId))
             {
                 playersReady.Add(playerId, false);
             }
-
-            // Marcar al jugador como listo
-            playersReady[playerId] = true;
+            playersReady[playerId] = true; // Marca al jugador como listo
             Debug.Log($"Jugador {playerId} ha marcado 'Listo'.");
-
-            // Actualiza la lista de jugadores en todos los clientes
             UpdatePlayerListClientRpc(playersReady.Keys.ToArray(), playersReady.Values.ToArray());
 
-            // Verificar si todos los jugadores están listos
+            // Habilita el botón de inicio si todos los jugadores están listos
             if (playersReady.Count == ConnectionManager.Singleton.connectedClients.Count)
             {
                 EnableStartButtonClientRpc();
@@ -66,58 +58,45 @@ public class LobbyManager : NetworkBehaviour
         }
         else
         {
-            // Notificar al servidor que el jugador está listo
             OnPlayerReadyServerRpc(NetworkManager.Singleton.LocalClientId);
         }
     }
 
-    // ServerRpc para actualizar la lista de jugadores listos
     [ServerRpc(RequireOwnership = false)]
     public void OnPlayerReadyServerRpc(ulong playerId)
     {
         if (!playersReady.ContainsKey(playerId))
         {
             playersReady.Add(playerId, false);
-            userList.text += playerId + " - Not Ready\n"; // Mostrar ID del jugador con "Not Ready"
+            userList.text += playerId + " - Not Ready\n";
             Debug.Log($"Servidor: Jugador {playerId} ha marcado 'Listo'.");
         }
-
-        // Actualiza la lista de jugadores en todos los clientes
         UpdatePlayerListClientRpc(playersReady.Keys.ToArray(), playersReady.Values.ToArray());
 
         if (playersReady.Count == ConnectionManager.Singleton.connectedClients.Count)
         {
-            EnableStartButtonClientRpc(); // Habilitar botón de "Start"
+            EnableStartButtonClientRpc();
         }
     }
 
     [ClientRpc]
     public void EnableStartButtonClientRpc()
     {
-        startGameButton.SetActive(true);
+        startGameButton.SetActive(true); // Habilita el botón de inicio en todos los clientes
         Debug.Log("El botón de 'Start' ha sido habilitado para todos los jugadores.");
     }
 
-    // Este método será invocado cuando se haga clic en el botón "Start"
     public void StartGame()
     {
         if (!IsServer) return;
-
-        // Solo el servidor habilita la escena y la desactivación del canvas
         if (menuCanvas != null)
         {
-            // Desactiva el menú en el servidor
-            DisableMenuCanvas();
+            DisableMenuCanvas(); // Desactiva el menú en el servidor
         }
-
-        // Llama al ClientRpc para desactivar el canvas en todos los clientes
-        DisableMenuCanvasClientRpc();
-
-        // Cambia la escena solo en el servidor
-        NetworkManager.Singleton.SceneManager.LoadScene("Level1", UnityEngine.SceneManagement.LoadSceneMode.Single);
+        DisableMenuCanvasClientRpc(); // Desactiva el menú en todos los clientes
+        NetworkManager.Singleton.SceneManager.LoadScene("Level1", LoadSceneMode.Single);
     }
 
-    // Este ClientRpc actualizará la lista de jugadores en todos los clientes
     [ClientRpc]
     public void UpdatePlayerListClientRpc(ulong[] playerIds, bool[] readyStatuses)
     {
@@ -125,17 +104,16 @@ public class LobbyManager : NetworkBehaviour
         {
             string status = readyStatuses[i] ? "Ready" : "Not Ready";
             userList.text += $"\nJugador {playerIds[i]} ha marcado 'Listo'.";
-
         }
     }
+
     public void DisableMenuCanvas()
     {
         startGameButton.SetActive(false);
         disconnectButton.SetActive(true);
-        // Desactiva todos los paneles del menú y el lobby, excepto el chat
+        // Desactiva todos los paneles del menú y lobby excepto el chat y el botón de desconexión
         if (menuCanvas != null)
         {
-            // Aquí desactivas todos los elementos menos el chatPanel y el disconnectButton
             foreach (Transform child in menuCanvas.transform)
             {
                 if (child.gameObject != chatPanel && child.gameObject != disconnectButton)
@@ -151,7 +129,7 @@ public class LobbyManager : NetworkBehaviour
     {
         startGameButton.SetActive(false);
         disconnectButton.SetActive(true);
-        // Desactiva todos los paneles del menú y el lobby en todos los clientes, excepto el chatPanel
+        // Desactiva los paneles en todos los clientes excepto el chat y el botón de desconexión
         if (menuCanvas != null)
         {
             foreach (Transform child in menuCanvas.transform)
